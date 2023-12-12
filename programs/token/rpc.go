@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Arculus-Holdings-L-L-C/solana-go/rpc"
 	bin "github.com/gagliardetto/binary"
-	"github.com/gagliardetto/solana-go/rpc"
 )
 
 const MINT_SIZE = 82

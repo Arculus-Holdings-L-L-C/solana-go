@@ -17,7 +17,7 @@ package rpc
 import (
 	"context"
 
-	"github.com/gagliardetto/solana-go"
+	"github.com/Arculus-Holdings-L-L-C/solana-go"
 )
 
 // GetTokenLargestAccounts returns the 20 largest accounts of a particular SPL Token type.

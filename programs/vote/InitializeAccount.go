@@ -15,7 +15,7 @@
 package vote
 
 import (
-	"github.com/gagliardetto/solana-go"
+	"github.com/Arculus-Holdings-L-L-C/solana-go"
 )
 
 type InitializeAccount struct {
