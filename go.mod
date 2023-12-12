@@ -1,4 +1,4 @@
-module github.com/gagliardetto/solana-go
+module github.com/Arculus-Holdings-L-L-C/solana-go
 
 go 1.16
 
