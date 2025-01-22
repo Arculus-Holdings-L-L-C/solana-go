@@ -1,7 +1,7 @@
 # Solana SDK library for Go
 
 [![GoDoc](https://pkg.go.dev/badge/github.com/Arculus-Holdings-L-L-C/solana-go?status.svg)](https://pkg.go.dev/github.com/Arculus-Holdings-L-L-C/solana-go@v1.8.4?tab=doc)
-[![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/gagliardetto/solana-go?include_prereleases&label=release-tag)](https://github.com/Arculus-Holdings-L-L-C/solana-go/releases)
+[![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/Arculus-Holdings-L-L-C/solana-go?include_prereleases&label=release-tag)](https://github.com/Arculus-Holdings-L-L-C/solana-go/releases)
 [![Build Status](https://github.com/Arculus-Holdings-L-L-C/solana-go/workflows/tests/badge.svg?branch=main)](https://github.com/Arculus-Holdings-L-L-C/solana-go/actions?query=branch%3Amain)
 [![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/Arculus-Holdings-L-L-C/solana-go/main)](https://www.tickgit.com/browse?repo=github.com/Arculus-Holdings-L-L-C/solana-go&branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Arculus-Holdings-L-L-C/solana-go)](https://goreportcard.com/report/github.com/Arculus-Holdings-L-L-C/solana-go)
