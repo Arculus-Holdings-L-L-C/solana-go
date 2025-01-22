@@ -14,6 +14,8 @@
 
 package ws
 
+import "context"
+
 type SlotResult struct {
 	Parent uint64 `json:"parent"`
 	Root   uint64 `json:"root"`
@@ -45,13 +47,35 @@ type SlotSubscription struct {
 	sub *Subscription
 }
 
-func (sw *SlotSubscription) Recv() (*SlotResult, error) {
+func (sw *SlotSubscription) Recv(ctx context.Context) (*SlotResult, error) {
 	select {
-	case d := <-sw.sub.stream:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case d, ok := <-sw.sub.stream:
+		if !ok {
+			return nil, ErrSubscriptionClosed
+		}
 		return d.(*SlotResult), nil
 	case err := <-sw.sub.err:
 		return nil, err
 	}
+}
+
+func (sw *SlotSubscription) Err() <-chan error {
+	return sw.sub.err
+}
+
+func (sw *SlotSubscription) Response() <-chan *SlotResult {
+	typedChan := make(chan *SlotResult, 1)
+	go func(ch chan *SlotResult) {
+		// TODO: will this subscription yield more than one result?
+		d, ok := <-sw.sub.stream
+		if !ok {
+			return
+		}
+		ch <- d.(*SlotResult)
+	}(typedChan)
+	return typedChan
 }
 
 func (sw *SlotSubscription) Unsubscribe() {

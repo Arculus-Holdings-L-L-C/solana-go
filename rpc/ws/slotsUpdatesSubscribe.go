@@ -14,7 +14,11 @@
 
 package ws
 
-import "github.com/Arculus-Holdings-L-L-C/solana-go"
+import (
+	"context"
+
+	"github.com/Arculus-Holdings-L-L-C/solana-go"
+)
 
 type SlotsUpdatesResult struct {
 	// The parent slot.
@@ -77,13 +81,35 @@ type SlotsUpdatesSubscription struct {
 	sub *Subscription
 }
 
-func (sw *SlotsUpdatesSubscription) Recv() (*SlotsUpdatesResult, error) {
+func (sw *SlotsUpdatesSubscription) Recv(ctx context.Context) (*SlotsUpdatesResult, error) {
 	select {
-	case d := <-sw.sub.stream:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case d, ok := <-sw.sub.stream:
+		if !ok {
+			return nil, ErrSubscriptionClosed
+		}
 		return d.(*SlotsUpdatesResult), nil
 	case err := <-sw.sub.err:
 		return nil, err
 	}
+}
+
+func (sw *SlotsUpdatesSubscription) Err() <-chan error {
+	return sw.sub.err
+}
+
+func (sw *SlotsUpdatesSubscription) Response() <-chan *SlotsUpdatesResult {
+	typedChan := make(chan *SlotsUpdatesResult, 1)
+	go func(ch chan *SlotsUpdatesResult) {
+		// TODO: will this subscription yield more than one result?
+		d, ok := <-sw.sub.stream
+		if !ok {
+			return
+		}
+		ch <- d.(*SlotsUpdatesResult)
+	}(typedChan)
+	return typedChan
 }
 
 func (sw *SlotsUpdatesSubscription) Unsubscribe() {

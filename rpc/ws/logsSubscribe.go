@@ -15,6 +15,8 @@
 package ws
 
 import (
+	"context"
+
 	"github.com/Arculus-Holdings-L-L-C/solana-go"
 	"github.com/Arculus-Holdings-L-L-C/solana-go/rpc"
 )
@@ -107,13 +109,35 @@ type LogSubscription struct {
 	sub *Subscription
 }
 
-func (sw *LogSubscription) Recv() (*LogResult, error) {
+func (sw *LogSubscription) Recv(ctx context.Context) (*LogResult, error) {
 	select {
-	case d := <-sw.sub.stream:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case d, ok := <-sw.sub.stream:
+		if !ok {
+			return nil, ErrSubscriptionClosed
+		}
 		return d.(*LogResult), nil
 	case err := <-sw.sub.err:
 		return nil, err
 	}
+}
+
+func (sw *LogSubscription) Err() <-chan error {
+	return sw.sub.err
+}
+
+func (sw *LogSubscription) Response() <-chan *LogResult {
+	typedChan := make(chan *LogResult, 1)
+	go func(ch chan *LogResult) {
+		// TODO: will this subscription yield more than one result?
+		d, ok := <-sw.sub.stream
+		if !ok {
+			return
+		}
+		ch <- d.(*LogResult)
+	}(typedChan)
+	return typedChan
 }
 
 func (sw *LogSubscription) Unsubscribe() {

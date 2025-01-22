@@ -15,6 +15,7 @@
 package ws
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Arculus-Holdings-L-L-C/solana-go"
@@ -67,6 +68,10 @@ type BlockSubscribeOpts struct {
 
 	// Whether to populate the rewards array. If parameter not provided, the default includes rewards.
 	Rewards *bool
+
+	// Max transaction version to return in responses.
+	// If the requested block contains a transaction with a higher version, an error will be returned.
+	MaxSupportedTransactionVersion *uint64
 }
 
 // NOTE: Unstable, disabled by default
@@ -99,7 +104,7 @@ func (cl *Client) BlockSubscribe(
 				opts.Encoding,
 				// Valid encodings:
 				// solana.EncodingJSON, // TODO
-				// solana.EncodingJSONParsed, // TODO
+				solana.EncodingJSONParsed, // TODO
 				solana.EncodingBase58,
 				solana.EncodingBase64,
 				solana.EncodingBase64Zstd,
@@ -113,6 +118,9 @@ func (cl *Client) BlockSubscribe(
 		}
 		if opts.Rewards != nil {
 			obj["rewards"] = opts.Rewards
+		}
+		if opts.MaxSupportedTransactionVersion != nil {
+			obj["maxSupportedTransactionVersion"] = *opts.MaxSupportedTransactionVersion
 		}
 		if len(obj) > 0 {
 			params = append(params, obj)
@@ -141,13 +149,35 @@ type BlockSubscription struct {
 	sub *Subscription
 }
 
-func (sw *BlockSubscription) Recv() (*BlockResult, error) {
+func (sw *BlockSubscription) Recv(ctx context.Context) (*BlockResult, error) {
 	select {
-	case d := <-sw.sub.stream:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case d, ok := <-sw.sub.stream:
+		if !ok {
+			return nil, ErrSubscriptionClosed
+		}
 		return d.(*BlockResult), nil
 	case err := <-sw.sub.err:
 		return nil, err
 	}
+}
+
+func (sw *BlockSubscription) Err() <-chan error {
+	return sw.sub.err
+}
+
+func (sw *BlockSubscription) Response() <-chan *BlockResult {
+	typedChan := make(chan *BlockResult, 1)
+	go func(ch chan *BlockResult) {
+		// TODO: will this subscription yield more than one result?
+		d, ok := <-sw.sub.stream
+		if !ok {
+			return
+		}
+		ch <- d.(*BlockResult)
+	}(typedChan)
+	return typedChan
 }
 
 func (sw *BlockSubscription) Unsubscribe() {
